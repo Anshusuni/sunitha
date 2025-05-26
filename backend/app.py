@@ -45,7 +45,8 @@ def analyze():
         result_label = class_labels[predicted_index]
     else:
         result_label = str(predicted_index)  # fallback
-
+    print("Prediction output:", prediction)
+    print("Predicted index:", predicted_index)
     return jsonify({
         "filename": image_file.filename,
         "predicted_class": result_label,
