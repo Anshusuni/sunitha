@@ -5,10 +5,10 @@ import numpy as np
 import io
 
 # Load the trained model once (globally)
-model = load_model("b.h5")
+model = load_model("b-h-1000.h5")
 
 # If you have class names, replace this list
-class_labels = ['cat', 'dog', 'elephant']  # <-- Replace with your real 3+ labels if more
+class_labels = ['boron', 'healthy']  # <-- Replace with your real 3+ labels if more
 
 # Preprocess image to 150x150
 def preprocess_image(img_bytes):
