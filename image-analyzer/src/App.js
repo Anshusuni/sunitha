@@ -1,7 +1,7 @@
+// App.js
 import React, { useState } from 'react';
 import axios from 'axios';
-import './App.css'; // Add this at the top of your App.js
-
+import './App.css';
 
 function App() {
   const [image, setImage] = useState(null);
@@ -16,13 +16,13 @@ function App() {
     formData.append('image', image);
 
     try {
-  const res = await axios.post('https://sp-3.onrender.com/analyze', formData);
-  setResult(`Predicted Class: ${res.data.predicted_class}`);
-} catch (err) {
-  console.error(err);
-  setResult('Error analyzing image');
-};
-
+      const res = await axios.post('https://sp-3.onrender.com/analyze', formData);
+      setResult(`Predicted Class: ${res.data.predicted_class}`);
+    } catch (err) {
+      console.error(err);
+      setResult('Error analyzing image');
+    }
+  };  // ← closes handleAnalyze
 
   return (
     <div className="App" style={{ padding: 20 }}>
