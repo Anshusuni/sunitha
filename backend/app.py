@@ -1,69 +1,54 @@
-# backend/app.py
-
-import os
-import io
-import numpy as np
-from flask import Flask, request, jsonify
-from pymongo import MongoClient
-from bson.binary import Binary
-from tensorflow.keras.models import load_model
+//app.py from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing import image as keras_image
 from PIL import Image
+import numpy as np
+import io 
 
-# ─── Flask setup ───────────────────────────────────────────────────────────────
-app = Flask(__name__)
+# Load the trained model once (globally)
+model = load_model("b-h-1000.h5")
 
-# ─── MongoDB setup (optional) ──────────────────────────────────────────────────
-# If you don't need Mongo, you can delete everything from here down to 'collection = ...'
-mongo_uri = os.environ.get("MONGODB_URI", "mongodb://localhost:27017/")
-client = MongoClient(mongo_uri)
-db = client["lost_and_found"]       # change to your DB name
-collection = db["uploads"]          # change to your collection name
+# If you have class names, replace this list
+class_labels = ['boron', 'healthy']  # <-- Replace with your real 3+ labels if more
 
-# ─── Model loading ─────────────────────────────────────────────────────────────
-MODEL_PATH = os.path.join(os.path.dirname(__file__), "b-h-1000.h5")
-model = load_model(MODEL_PATH)
-# Update this list to match your model’s classes:
-class_labels = ['boron', 'healthy']
-
-# ─── Image preprocessing helper ────────────────────────────────────────────────
+# Preprocess image to 150x150
 def preprocess_image(img_bytes):
     img = Image.open(io.BytesIO(img_bytes)).convert("RGB")
-    img = img.resize((150, 150))  # match your training size
-    arr = keras_image.img_to_array(img)
-    arr = np.expand_dims(arr, axis=0) / 255.0
-    return arr
+    img = img.resize((150, 150))  # Your training size
+    img_array = keras_image.img_to_array(img)
+    img_array = np.expand_dims(img_array, axis=0)
+    img_array = img_array / 255.0  # Normalization (if you used it during training)
+    return img_array
 
-# ─── Analyze endpoint ──────────────────────────────────────────────────────────
 @app.route("/analyze", methods=["POST"])
 def analyze():
-    # 1) check for file
     if 'image' not in request.files:
         return jsonify({"error": "No file uploaded"}), 400
 
-    f = request.files['image']
-    data = f.read()
+    image_file = request.files['image']
+    image_data = image_file.read()
 
-    # 2) (optional) store raw bytes in MongoDB
+    # Optional: Store in MongoDB
     collection.insert_one({
-        "filename": f.filename,
-        "data": Binary(data)
+        "filename": image_file.filename,
+        "data": Binary(image_data)
     })
 
-    # 3) run model
-    x = preprocess_image(data)
-    preds = model.predict(x)
-    idx = int(np.argmax(preds, axis=1)[0])
-    label = class_labels[idx] if idx < len(class_labels) else str(idx)
+    # Preprocess and predict
+    processed = preprocess_image(image_data)
+    prediction = model.predict(processed)
 
-    # 4) respond
+    # Get predicted class index
+    predicted_index = np.argmax(prediction, axis=1)[0]
+
+    # Map to label
+    if predicted_index < len(class_labels):
+        result_label = class_labels[predicted_index]
+    else:
+        result_label = str(predicted_index)  # fallback
+    print("Prediction output:", prediction)
+    print("Predicted index:", predicted_index)
     return jsonify({
-        "filename": f.filename,
-        "predicted_class": label,
-        "raw_output": preds.tolist()
+        "filename": image_file.filename,
+        "predicted_class": result_label,
+        "raw_output": prediction.tolist()
     })
-
-# ─── Entrypoint for local testing ──────────────────────────────────────────────
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=False)
