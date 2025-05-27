@@ -5,7 +5,7 @@ import numpy as np
 import io 
 
 # Load the trained model once (globally)
-model = load_model("backend/b-h-1000.h5")
+model = load_model("b-h-1000.h5")
 
 # If you have class names, replace this list
 class_labels = ['boron', 'healthy']  # <-- Replace with your real 3+ labels if more
