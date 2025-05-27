@@ -16,7 +16,7 @@ function App() {
     formData.append('image', image);
 
     try {
-      const res = await axios.post('https://sp-3.onrender.com/analyze', formData);
+      const res = await axios.post('https://sunitha-h4d7.onrender.com/analyze', formData);
       setResult(`Predicted Class: ${res.data.predicted_class}`);
     } catch (err) {
       console.error(err);
