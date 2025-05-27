@@ -1,5 +1,6 @@
-tensorflow==2.12.0
-flask
+tensorflow-cpu
+Pillow
+Flask                   
 flask-cors
 pymongo
 python-dotenv
